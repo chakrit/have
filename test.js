@@ -2,17 +2,115 @@
 // test.js - Test suites for have.js
 (function() {
 
-  require('mocha-subject').infect()
+  var assert = require('chai').assert
+    , filename = process.env.COVER ? './have-cov.js' : './have.js'
+    , have = require(filename);
 
-  var assert = require('chai').assert;
+  var NON_ARRS = [null, undefined, 'str', 123, { }]
+    , NON_OBJS = [null, undefined, 'str', 123];
 
-  var FILE = process.env.COVER ? './have-cov.js' : './have.js';
+  var COMMON_TYPES = ['string', 'number', 'object', 'function']
+    , FUNC = function() { };
+
 
   describe('HAVE module', function() {
-    subject('have', function() { return require(FILE); });
+    it('should exports a function', function() { assert.typeOf(have, 'function'); });
 
-    it('should exports a function', function() {
-      assert.typeOf(this.have, 'function');
+    it('should throws if `args` argument does not looks like an array', function() {
+      NON_ARRS.forEach(function(thing) {
+        assert.throws(function() { have(thing); }, /arguments/i);
+      });
+    });
+    // TODO: Check arguments object
+    //
+    it('should *not* throws if `args` is function `arguments`', function() {
+      assert.doesNotThrow(function() {
+        var func = function() { have(arguments, { }); };
+        func.call(this);
+      });
+    });
+
+    it('should throws if `schema` argument does not looks like an options hash', function() {
+      NON_OBJS.forEach(function(thing) {
+        console.log(require('util').inspect(thing));
+        assert.throws(function() { have([], thing); }, /schema/i);
+      });
+    });
+
+    describe('with empty schema', function() {
+      it('should *not* throws', function() {
+        assert.doesNotThrow(function() { have([], { }); });
+      });
+    }); // empty schema
+
+    // templated tests
+    function checkThrows(cases) {
+      for (var description in cases) (function(description, args) {
+        it('should throws if ' + description, function() {
+          assert.throws(function() {
+            have.call(this, args[0], args[1]);
+          }, args[2]);
+        });
+      })(description, cases[description]);
+    }
+
+    function checkNotThrows(cases) {
+      for (var description in cases) (function(description, args) {
+        it('should *not* throws if ' + description, function() {
+          assert.doesNotThrow(function() {
+            have.call(this, args[0], args[1]);
+          }, args[2]);
+        });
+      })(description, cases[description]);
+    }
+
+    // schema tests
+    describe('with basic schema', function() {
+      var SCHEMA =
+        { one: 'string'
+        , two: 'number'
+        , three: 'function' };
+
+      checkThrows(
+        { 'first argument is missing'          : [[], SCHEMA, /one/i]
+        , 'second argument is missing'         : [['str'], SCHEMA, /two/i]
+        , 'third argument is missing'          : [['str', 123], SCHEMA, /three/i]
+        , 'first argument is of invalid type'  : [[123], SCHEMA, /one/i]
+        , 'second argument is of invalid type' : [['str', 'str'], SCHEMA, /two/i]
+        , 'third argument is of invalid type'  : [['str', 123, 'str'], SCHEMA, /three/i]
+        });
+
+      checkNotThrows({ 'all arguments given correctly': [['str', 123, FUNC], SCHEMA] });
+
+    }); // basic schema
+
+    describe('with array schema', function() {
+      var SCHEMA = { arr: 'array' };
+
+      checkThrows(
+        { 'array argument is missing'        : [[], SCHEMA, /arr/i]
+        , 'array argument is *not* an array' : [['str'], SCHEMA, /arr/i]
+        });
+
+      checkNotThrows({ 'array argument given correctly': [[[123, 456]], SCHEMA] });
+
+      describe('with member type specified', function() {
+        var SCHEMA = { nums: 'number array' };
+
+        checkThrows(
+          { 'array member is falsy': [[[null]], SCHEMA, /member/i]
+          , 'array member is of invalid type': [[['str']], SCHEMA, /nums/i]
+          });
+
+        checkNotThrows(
+          { 'array argument with members given correctly': [[[123, 456]], SCHEMA]
+          });
+
+      });
+    }); // array schema
+
+    describe('with optional argument schema', function() {
+      // CONTINUE:
     });
   });
 
