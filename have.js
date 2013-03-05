@@ -2,21 +2,52 @@
 // have.js - Main have.js exports
 module.exports = (function(undefined) {
 
-  var assert = require('assert');
+  var ARR_RX = /^(.+) array$/i
+    , OR_RX  = /^(.+) or (.+)$/i
+    , OPT_RX = /^opt(ional)? (.+)$/i;
 
-  var ARR_RX = /^(.+) array$/i;
+  function ensure(argName, argType, value, message, assert) {
+    var assert = assert || require('assert')
+      , memberType = null
+      , result = true
+      , match = null, i = 0;
 
-  function ensure(argName, argType, value, message) {
-    var memberType = null, match = null, i = 0;
+    /*
+    match = argType.match(OPT_RX);
+    if (match) {
+      memberType = match[2]
+      ensure(argName, memberType, value);
+      return;
+    }
+    */
+
+    match = argType.match(OR_RX);
+    if (match) {
+      memberType = match[1];
+      ensure(argName, memberType, value, '', function (condition, message) {
+        result = condition;
+      });
+
+      if (result) return;
+
+      memberType = match[2];
+      ensure(argName, memberType, value, '', function (condition, message) {
+        result = condition;
+      });
+
+      assert(result, message ||
+        (argName + " argument is neither a " + match[1] + " nor " + match[2]));
+    }
 
     match = argType.match(ARR_RX);
     if (match) { // array
       ensure(argName, 'array', value, message);
 
-      memberType = match[1]
+      memberType = match[1];
       for (i = 0; i < value.length; i++)
         ensure(argName, memberType, value[i], message ||
           (argName + " argument has falsy or non-" + memberType + " member."));
+      return;
     }
 
     switch (argType) {
@@ -40,9 +71,13 @@ module.exports = (function(undefined) {
     if (!(schema && typeof schema === 'object'))
       throw new Error('have() called with invalid schema object');
 
-    var idx = 0, argName = null, arg = null;
-    for (argName in schema)
+    var idx = 0
+      , argName = null
+      , validations
+
+    for (argName in schema) {
       ensure(argName, schema[argName], args[idx++]);
+    }
   };
 
 })();

@@ -98,8 +98,8 @@
         var SCHEMA = { nums: 'number array' };
 
         checkThrows(
-          { 'array member is falsy': [[[null]], SCHEMA, /member/i]
-          , 'array member is of invalid type': [[['str']], SCHEMA, /nums/i]
+          { 'array member is falsy'           : [[[null]], SCHEMA, /member/i]
+          , 'array member is of invalid type' : [[['str']], SCHEMA, /nums/i]
           });
 
         checkNotThrows(
@@ -109,9 +109,39 @@
       });
     }); // array schema
 
-    describe('with optional argument schema', function() {
-      // CONTINUE:
-    });
+    describe('with OR argument schema', function() {
+      var SCHEMA = { str: 'string or number' };
+
+      checkThrows(
+        { 'argument is missing or falsy'              : [[null], SCHEMA, /str/i]
+        , 'argument is of neither the specified type' : [[FUNC], SCHEMA, /str/i]
+        });
+
+      checkNotThrows(
+        { 'argument is of the first type': [['str'], SCHEMA]
+        , 'argument is of the second type': [[123], SCHEMA]
+        });
+    }); // OR schema
+
+    describe.skip('with optional argument schema', function() {
+      var SCHEMA =
+        { str: 'string'
+        , num: 'optional number'
+        , cb: 'function' };
+
+      checkThrows(
+        { 'arguments before the optional arg is missing'         : [[], SCHEMA, /str/i]
+        , 'arguments after the optional arg is missing'          : [['str', 123], SCHEMA, /cb/i]
+        , 'arguments before the optional arg is of invalid type' : [[123], SCHEMA, /str/i]
+        , 'arguments after the optional arg is of invalid type'  : [['str', 123, 'str'], SCHEMA, /cb/i]
+        });
+
+      checkNotThrows(
+        { 'optional argument omitted but other arguments are given correctly'        : [['str', FUNC], SCHEMA]
+        , 'optional arguments specified and all other arguments are given correctly' : [['str', 123, FUNC], SCHEMA]
+        });
+
+    }); // optional arg schema
   });
 
 })();
