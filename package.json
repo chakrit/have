@@ -2,7 +2,7 @@
   "name": "have",
   "version": "0.1.0",
   "description": "Have your arguments - Function arguments validator.",
-  "main": "index.js",
+  "main": "have.js",
   "scripts": {
     "test": "make test",
     "prepublish": "make test"
