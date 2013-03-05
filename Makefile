@@ -24,7 +24,7 @@ test: node_modules
 tdd: node_modules
 	@$(BIN)/supervisor $(WATCH_OPTS) $(MAKE) test
 
-html-report: $(MAIL_FILE_COV)
+html-report: $(MAIN_FILE_COV)
 	@COVER=1 $(BIN)/mocha $(TEST_OPTS) --reporter mocha-istanbul $(TEST_FILE)
 	@echo open html-report/index.html to view coverage report.
 
