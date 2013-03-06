@@ -69,18 +69,21 @@
       var SCHEMA =
         { one: 'string'
         , two: 'number'
-        , three: 'function' };
+        , three: 'function'
+        , four: 'object' };
 
       checkThrows(
         { 'first argument is missing'          : [[], SCHEMA, /one/i]
         , 'second argument is missing'         : [['str'], SCHEMA, /two/i]
         , 'third argument is missing'          : [['str', 123], SCHEMA, /three/i]
+        , 'fourth argument is missing'         : [['str', 123, FUNC], SCHEMA, /four/i]
         , 'first argument is of invalid type'  : [[123], SCHEMA, /one/i]
         , 'second argument is of invalid type' : [['str', 'str'], SCHEMA, /two/i]
         , 'third argument is of invalid type'  : [['str', 123, 'str'], SCHEMA, /three/i]
+        , 'fourth argument is of invalid type' : [['str', 123, FUNC, 123], SCHEMA, /four/i]
         });
 
-      checkNotThrows({ 'all arguments given correctly': [['str', 123, FUNC], SCHEMA] });
+      checkNotThrows({ 'all arguments given correctly': [['str', 123, FUNC, { }], SCHEMA] });
 
     }); // basic schema
 

@@ -62,6 +62,10 @@ module.exports = (function(undefined) {
         assert(value instanceof Array, message ||
           (argName + " argument missing or not " + argType));
         break;
+
+      case 'object':
+        assert(value && typeof value === 'object', message ||
+            (argName + " argument missing or not object"));
     }
   }
 
