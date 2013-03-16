@@ -1,4 +1,6 @@
 
+[![Build Status](https://travis-ci.org/chakrit/have.png?branch=master)](https://travis-ci.org/chakrit/have)
+
 # HAVE.js
 
 Have your arguments, and validate it too:
