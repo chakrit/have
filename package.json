@@ -1,6 +1,6 @@
 {
   "name": "have",
-  "version": "0.1.1-0",
+  "version": "0.2.0-0",
   "description": "Have your arguments, and validate it too.",
   "main": "have.js",
   "scripts": {
