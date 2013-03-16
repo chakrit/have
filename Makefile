@@ -1,6 +1,7 @@
 
 BIN             = ./node_modules/.bin
-TEST_OPTS       = --timeout 100 --slow 50 --reporter spec --globals __coverage__ --bail
+TEST_REPORTER   = spec
+TEST_OPTS       = --timeout 100 --slow 50 --reporter $(TEST_REPORTER) --globals __coverage__ --bail
 WATCH_OPTS      = -q -e 'js' -w . -n exit -x
 
 MAIN_FILE      := have.js
