@@ -1,3 +1,85 @@
 
-TODO: Write a README
+# HAVE.js
+
+Have your arguments, and validate it too:
+
+```js
+var have = require('have');
+
+function safeFunc(id, options, callback) {
+  have(arguments,
+    { id       : 'string or number'
+    , options  : 'optional object'
+    , callback : 'function'
+    });
+}
+```
+
+HAVE.js gives you a mini-DSL to quickly validate your function arguments.
+
+# MINI-DSL
+
+In order of precedence:
+
+* `opt X|optional X` - Optional X
+* `X or Y` - Either X or Y
+* `X a|X arr|x array` - Array of X
+* `s|str|string` - String
+* `n|num|number` - Number
+* `f|fun|func|function` - Function
+* `a|arr|array` - Array
+* `o|obj|object` - Object
+
+These matchers can be combined. These are all valid HAVE.js matchers:
+
+* `str or num array` - String or Array of Number
+* `num a a a a` - Array of Array of Array of Array of Number
+* `opt str or num array` - Optional String or Array of Number
+
+Have fun!
+
+# SOFT ASSERTS
+
+If you are like me and you write a lot of method preconditions that should be turned off
+or atleast, should *not* throws in production, you can replace HAVE.js assert function
+like so:
+
+```js
+var have = require('have');
+
+have.assert(function(cond, message) {
+  if (!cond) {
+    console.log('WARN: assertion failed: ' + message);
+  }
+});
+```
+
+This will replace the `assert` function HAVE.js uses internally with your implementation
+so if you want to completely turns assertion off, then just give it a no-op function.
+
+# SHORTERs
+
+For those who like it short, the above example can also be written like this:
+
+```js
+var have = require('have');
+
+function safeFunc(id, options, callback) {
+  have(arguments, { id: 's or n', options: 'opt o', callback: 'f' });
+}
+```
+
+This is not very readable, of course. But HAVE.js does not dictate your readability
+prefrence for you. So go wild if you think it is ok : )
+
+# LICENSE
+
+BSD (if you don't like BSD, just contact me)
+
+# SUPPORT / CONTRIBUTE
+
+Just open a [new GitHub issue](https://github.com/chakrit/have/issues/new) or ping me
+[@chakrit](https://twitter.com/chakrit) on Twitter.
+
+Pull requests and feature suggestions totally welcome.
 
