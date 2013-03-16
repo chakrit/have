@@ -7,7 +7,7 @@ module.exports = (function(undefined) {
     , log    = function() { } // require('util').log; // disabled
     ;
 
-  var ARR_RX = /^(.+) arr(ay)?$/i
+  var ARR_RX = /^(.+) a(rr(ay)?)?$/i
     , OR_RX  = /^(.+) or (.+)$/i
     , OPT_RX = /^opt(ional)? (.+)$/i;
 
