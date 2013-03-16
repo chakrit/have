@@ -11,7 +11,7 @@ TEST_FILE      := test.js
 default: test
 
 clean:
-	-rm $(MAIL_FILE_COV)
+	-rm $(MAIN_FILE_COV)
 	-rm -Rf coverage
 	-rm -Rf html-report
 
