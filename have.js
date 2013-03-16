@@ -2,87 +2,120 @@
 // have.js - Main have.js exports
 module.exports = (function(undefined) {
 
-  var ARR_RX = /^(.+) array$/i
+  var assert = require('assert')
+    , fmt    = require('util').format
+    , log    = function() { } // require('util').log; // disabled
+    ;
+
+  var ARR_RX = /^(.+) arr(ay)?$/i
     , OR_RX  = /^(.+) or (.+)$/i
     , OPT_RX = /^opt(ional)? (.+)$/i;
 
-  function ensure(argName, argType, value, message, assert) {
-    var assert = assert || require('assert')
-      , memberType = null
-      , result = true
-      , match = null, i = 0;
+  // core recursive check
+  function ensure(argName, argType, value, check) {
+    var memberType = null
+      , valid      = true
+      , reason     = null
+      , match      = null
+      , i          = 0;
 
-    /*
-    match = argType.match(OPT_RX);
-    if (match) {
-      memberType = match[2]
-      ensure(argName, memberType, value);
-      return;
+    function softAssert(cond, reason_) { if (!(valid = cond)) reason = reason_; }
+    function logMatch() { log(match[0]); }
+
+    if (match = argType.match(OPT_RX)) {
+      logMatch();
+      memberType = match[2];
+
+      ensure(argName, memberType, value, softAssert);
+      return valid; // consume arg if valid
     }
-    */
 
-    match = argType.match(OR_RX);
-    if (match) {
+    if (match = argType.match(OR_RX)) {
+      logMatch();
       memberType = match[1];
-      ensure(argName, memberType, value, '', function (condition, message) {
-        result = condition;
-      });
+      ensure(argName, memberType, value, softAssert);
 
-      if (result) return;
+      if (valid) return true;
+      valid = true; // reset previous softAssert
 
       memberType = match[2];
-      ensure(argName, memberType, value, '', function (condition, message) {
-        result = condition;
-      });
+      ensure(argName, memberType, value, softAssert);
 
-      assert(result, message ||
-        (argName + " argument is neither a " + match[1] + " nor " + match[2]));
+      check(valid, fmt("%s argument is neither a %s nor %s",
+        argName, match[1], match[2]));
+      return true;
     }
 
-    match = argType.match(ARR_RX);
-    if (match) { // array
-      ensure(argName, 'array', value, message);
+    if (match = argType.match(ARR_RX)) {
+      logMatch();
+      ensure(argName, 'array', value, softAssert);
+
+      if (!valid) {
+        check(false, reason);
+        return false;
+      }
 
       memberType = match[1];
-      for (i = 0; i < value.length; i++)
-        ensure(argName, memberType, value[i], message ||
-          (argName + " argument has falsy or non-" + memberType + " member."));
-      return;
+      for (i = 0; i < value.length; i++) {
+        ensure(argName, memberType, value[i], softAssert);
+
+        if (!valid) {
+          check(false, fmt("%s element is falsy or not a %s", argName, memberType));
+          return false;
+        }
+      }
+
+      return true;
     }
 
-    switch (argType) {
-      case 'string':
-      case 'number':
-      case 'function':
-        assert(typeof value === argType, message ||
-          (argName + " argument missing or not " + argType));
-        break;
+    // normal types
+    log(argType);
+    switch(argType) {
+      case 's': case 'str': case 'string':
+        valid = typeof value === 'string'; break;
 
-      case 'array':
-        assert(value instanceof Array, message ||
-          (argName + " argument missing or not " + argType));
-        break;
+      case 'n': case 'num': case 'number':
+        valid = typeof value === 'number'; break;
 
-      case 'object':
-        assert(value && typeof value === 'object', message ||
-            (argName + " argument missing or not object"));
+      case 'f': case 'fun': case 'func': case 'function':
+        valid = typeof value === 'function'; break;
+
+      case 'a': case 'arr': case 'array':
+        valid = value instanceof Array; break;
+
+      case 'o': case 'obj': case 'object':
+        valid = value && typeof value === 'object'; break;
+
+      default:
+        valid = false; break;
     }
+
+    check(valid, fmt("%s argument is not %s", argName, argType));
+    return true;
   }
 
-  return function have(args, schema) {
+  // exports
+  function have(args, schema) {
     if (!(args && typeof args === 'object' && 'length' in args))
       throw new Error('have() called with invalid arguments list');
     if (!(schema && typeof schema === 'object'))
       throw new Error('have() called with invalid schema object');
 
-    var idx = 0
-      , argName = null
-      , validations
+    var idx     = 0
+      , argName = null;
 
     for (argName in schema) {
-      ensure(argName, schema[argName], args[idx++]);
+      if (ensure(argName, schema[argName], args[idx], assert))
+        idx++;
     }
   };
+
+  // configuration
+  have.assert = function(assert_) {
+    return (assert_ === undefined) ? assert : (assert = assert_);
+  };
+
+  return have;
 
 })();
 

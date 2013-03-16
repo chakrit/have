@@ -6,7 +6,7 @@
     , filename = process.env.COVER ? './have-cov.js' : './have.js'
     , have = require(filename);
 
-  var NON_ARRS = [null, undefined, 'str', 123, { }]
+  var NON_ARRS = [null, undefined, 'str', 123, { }, function() { }]
     , NON_OBJS = [null, undefined, 'str', 123];
 
   var COMMON_TYPES = ['string', 'number', 'object', 'function']
@@ -14,7 +14,30 @@
 
 
   describe('HAVE module', function() {
-    it('should exports a function', function() { assert.typeOf(have, 'function'); });
+    it('should exports a function', function() { assert.isFunction(have); });
+
+    describe('configuration', function() {
+      describe('assert() function', function() {
+        it('should be exported', function() {
+          assert.isFunction(have.assert);
+        });
+
+        it('should returns the native assert() function when called normally', function() {
+          assert.equal(have.assert(), require('assert'));
+        });
+
+        it('should use given function as assert() replacement', function() {
+          var called = false
+            , spy = function() { called = true; };
+
+          have.assert(spy);
+          have([123], { one: 'string' });
+
+          assert.isTrue(called);
+          have.assert(require('assert'));
+        });
+      });
+    });
 
     it('should throws if `args` argument does not looks like an array', function() {
       NON_ARRS.forEach(function(thing) {
@@ -32,7 +55,6 @@
 
     it('should throws if `schema` argument does not looks like an options hash', function() {
       NON_OBJS.forEach(function(thing) {
-        console.log(require('util').inspect(thing));
         assert.throws(function() { have([], thing); }, /schema/i);
       });
     });
@@ -67,10 +89,10 @@
     // schema tests
     describe('with basic schema', function() {
       var SCHEMA =
-        { one: 'string'
-        , two: 'number'
-        , three: 'function'
-        , four: 'object' };
+        { one   : 'string'
+        , two   : 'number'
+        , three : 'function'
+        , four  : 'object' };
 
       checkThrows(
         { 'first argument is missing'          : [[], SCHEMA, /one/i]
@@ -101,7 +123,7 @@
         var SCHEMA = { nums: 'number array' };
 
         checkThrows(
-          { 'array member is falsy'           : [[[null]], SCHEMA, /member/i]
+          { 'array member is falsy'           : [[[null]], SCHEMA, /element/i]
           , 'array member is of invalid type' : [[['str']], SCHEMA, /nums/i]
           });
 
@@ -126,11 +148,11 @@
         });
     }); // OR schema
 
-    describe.skip('with optional argument schema', function() {
+    describe('with optional argument schema', function() {
       var SCHEMA =
-        { str: 'string'
-        , num: 'optional number'
-        , cb: 'function' };
+        { str : 'string'
+        , num : 'optional number'
+        , cb  : 'function' };
 
       checkThrows(
         { 'arguments before the optional arg is missing'         : [[], SCHEMA, /str/i]
@@ -145,6 +167,98 @@
         });
 
     }); // optional arg schema
+
+    describe('with complex schema', function() {
+      describe('`string array or number array` type', function() {
+        var SCHEMA = { arg: 'string array or number array' };
+
+        it('should throws if non-array is given', function() {
+          NON_ARRS.forEach(function(thing) {
+            assert.throws(function() { have([thing], SCHEMA); }, /array/i);
+          });
+        });
+
+        it('should throws if array given but element is of neither type', function() {
+          assert.throws(function() { have([{ }], SCHEMA); }, /neither/i);
+        });
+
+        it('should *not* throws if element is of string type', function() {
+          assert.doesNotThrow(function() { have([['string']], SCHEMA); });
+        });
+
+        it('should *not* throws if element is of number type', function() {
+          assert.doesNotThrow(function() { have([[123]], SCHEMA); });
+        });
+
+      });
+
+      describe('`opt num, str, opt str, str, opt num` type (ambiguous optionals)', function() {
+        var SCHEMA =
+          { one   : 'opt num'
+          , two   : 'str'
+          , three : 'opt str'
+          , four  : 'str'
+          , five  : 'opt num'
+          };
+
+        checkThrows(
+          { 'nothing is given'            : [[], SCHEMA, /two/i]
+          , 'a single argument is given'  : [['two'], SCHEMA, /four/i]
+          , 'two numbers are given'       : [[123, 456], SCHEMA, /two/i]
+          , 'two strings are given'       : [['str', 'abc'], SCHEMA, /four/i]
+          , 'only the 3rd arg is omitted' : [[123, 'str', 'abc', 456], SCHEMA, /four/i]
+          });
+
+        checkNotThrows(
+          { 'three strings are given'              : [['str', 'abc', 'def'], SCHEMA]
+          , 'a number and three strings are given' : [[123, 'a', 'b', 'c'], SCHEMA]
+          , 'everything is given'                  : [[123, 'a', 'b', 'c', 456], SCHEMA]
+          });
+      });
+
+      // actually an invalid type but we're testing it to make sure nonetheless
+      describe('`str or opt num` type (nested optional)', function() {
+        var SCHEMA = { one: 'str or opt num' };
+
+        checkNotThrows(
+          { 'argument is given but of neither type' : [[{ }], SCHEMA]
+          , 'string argument is given'              : [['str'], SCHEMA]
+          , 'number argument is given'              : [[123], SCHEMA]
+          });
+      });
+
+      describe('`str or num or arr or func` type (nested ORs)', function() {
+        var SCHEMA = { one: 'str or num or arr or func' };
+
+        checkNotThrows(
+          { 'string is given'   : [['str'], SCHEMA]
+          , 'number is given'   : [[123], SCHEMA]
+          , 'array is given'    : [[[]], SCHEMA]
+          , 'function is given' : [[FUNC], SCHEMA]
+          });
+
+        checkThrows({ 'object is given': [[{ }], SCHEMA] });
+      });
+
+      describe('`num arr arr arr` type (nested arrays)', function() {
+        var SCHEMA = { one: 'num arr arr arr' };
+
+        checkThrows(
+          { 'non-array is given at first nesting level'  : [[[123]], SCHEMA, /one/i]
+          , 'non-array is given at second nesting level' : [[[[123]]], SCHEMA, /one/i]
+          });
+
+        checkNotThrows(
+          { 'an empty array is given'                : [[[]], SCHEMA]
+          , 'a nested empty array is given'          : [[[[]]], SCHEMA]
+          , 'deeply nested empty array is given'     : [[ [[[]]] ], SCHEMA]
+          , 'multiple nested empty arrays are given' : [[ [], [[]], [[[]]], [[[[]]]] ], SCHEMA]
+          , 'number array is given at correct depth' : [[ [[[123]]] ], SCHEMA]
+          , 'multiple nested number arrays are given' : [[ [[[123], [456]], [[789]]] ], SCHEMA]
+          })
+      });
+    })
+
   });
 
 })();
