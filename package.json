@@ -1,7 +1,7 @@
 {
   "name": "have",
   "version": "0.1.1-0",
-  "description": "Have your arguments - Function arguments validator.",
+  "description": "Have your arguments, and validate it too.",
   "main": "have.js",
   "scripts": {
     "test": "make test",
