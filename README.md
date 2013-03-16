@@ -33,8 +33,9 @@ In order of precedence:
 These matchers can be combined. These are all valid HAVE.js matchers:
 
 * `str or num array` - String or Array of Number
+* `num arr or str arr` - Array of Number or Array of String
 * `num a a a a` - Array of Array of Array of Array of Number
-* `opt str or num array` - Optional String or Array of Number
+* `opt str or num array` - Optional (String or Array of Number)
 
 Have fun!
 
@@ -77,6 +78,8 @@ prefrence for you. So go wild if you think it is ok : )
 BSD (if you don't like BSD, just contact me)
 
 # SUPPORT / CONTRIBUTE
+
+Test with `npm test` or `make test`.
 
 Just open a [new GitHub issue](https://github.com/chakrit/have/issues/new) or ping me
 [@chakrit](https://twitter.com/chakrit) on Twitter.
