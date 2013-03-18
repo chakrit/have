@@ -2,6 +2,7 @@
 var assert = require('assert')
   , have = require('./have.js');
 
+
 function withHave(id, arr, opts, callback) {
   have(arguments,
     { id: 'str or num'
@@ -18,6 +19,7 @@ function withHave(id, arr, opts, callback) {
 
   // logic...
 }
+
 
 function withoutHave(id, arr, opts, callback) {
   assert(typeof id === 'string' || typeof id === 'number',
@@ -38,6 +40,7 @@ function withoutHave(id, arr, opts, callback) {
 
   // logic...
 }
+
 
 test(withHave);
 test(withoutHave);
