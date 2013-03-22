@@ -31,6 +31,8 @@ In order of precedence:
 * `f|fun|func|function` - Function
 * `a|arr|array` - Array
 * `o|obj|object` - Object
+* `r|rx|regex|regexp` - RegExp
+* `d|date` - Date
 
 These matchers can be combined. These are all valid HAVE.js matchers:
 
