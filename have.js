@@ -68,9 +68,11 @@ module.exports = (function(undefined) {
       return true;
     }
 
-    // normal types
+    // atom types
     log(argType);
     switch(argType) {
+
+      // basic types
       case 's': case 'str': case 'string':
         valid = typeof value === 'string'; break;
 
@@ -85,6 +87,13 @@ module.exports = (function(undefined) {
 
       case 'o': case 'obj': case 'object':
         valid = value && typeof value === 'object'; break;
+
+      // built-in types
+      case 'r': case 'rx': case 'regex': case 'regexp':
+        valid = value && value instanceof RegExp; break;
+
+      case 'd': case 'date': // TODO: case 't': case 'time': case 'datetime': // ?
+        valid = value && value instanceof Date; break;
 
       default:
         valid = false; break;

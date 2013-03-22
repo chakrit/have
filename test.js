@@ -109,6 +109,37 @@
 
     }); // basic schema
 
+    describe('with built-in types schema', function() {
+      describe('RegExp type', function() {
+        var SCHEMA = { one: 'regex' };
+
+        checkThrows(
+          { 'regex argument is missing'        : [[], SCHEMA, /one/i]
+          , 'regex argument is *not* a RegExp' : [['123'], SCHEMA, /one/i]
+          });
+
+        checkNotThrows(
+          { 'RegExp instance given as argument'            : [[new RegExp()], SCHEMA]
+          , 'regular expression literal given as argument' : [[/test/i], SCHEMA]
+          });
+      });
+
+      describe('Date type', function() {
+        var SCHEMA = { one: 'date' };
+
+        checkThrows(
+          { 'date argument is missing'               : [[], SCHEMA, /one/i]
+          , 'date argument is *not* a Date instance' : [[{ }], SCHEMA, /one/i]
+          , 'date argument is a string'              : [['' + new Date()], SCHEMA, /one/i]
+          });
+
+        checkNotThrows(
+          { 'date argument is given correctly' : [[new Date()], SCHEMA]
+          });
+
+      });
+    });
+
     describe('with array schema', function() {
       var SCHEMA = { arr: 'array' };
 
