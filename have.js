@@ -27,7 +27,11 @@ module.exports = (function(undefined) {
       memberType = match[2];
 
       ensure(argName, memberType, value, softAssert);
-      return valid; // consume arg if valid
+
+      // optional is consumed if it match or a null/undefined is given.
+      return valid ||
+        value === null ||
+        value === undefined;
     }
 
     if (match = argType.match(OR_RX)) {

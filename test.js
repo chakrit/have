@@ -195,6 +195,8 @@
       checkNotThrows(
         { 'optional argument omitted but other arguments are given correctly'        : [['str', FUNC], SCHEMA]
         , 'optional arguments specified and all other arguments are given correctly' : [['str', 123, FUNC], SCHEMA]
+        , 'optional argument is specified as `null`'                                 : [['str', null, FUNC], SCHEMA]
+        , 'optioanl argument is specified as `undefined`'                            : [['str', undefined, FUNC], SCHEMA]
         });
 
     }); // optional arg schema
