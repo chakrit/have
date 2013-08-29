@@ -81,6 +81,12 @@ prefrence for you. So go wild if you think it is ok : )
 
 BSD (if you don't like BSD, just contact me)
 
+# CHANGELOG
+
+#### v0.2.1 - v0.2.2
+
+* Eat `null` and `undefined` where optional argument is expected.
+
 # SUPPORT / CONTRIBUTE
 
 Test with `npm test` or `make test`.
