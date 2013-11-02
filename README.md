@@ -75,7 +75,7 @@ function safeFunc(id, options, callback) {
 ```
 
 This is not very readable, of course. But HAVE.js does not dictate your readability
-prefrence for you. So go wild if you think it is ok : )
+preference for you. So go wild if you think it is ok : )
 
 # LICENSE
 
