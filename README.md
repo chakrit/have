@@ -84,6 +84,10 @@ BSD (if you don't like BSD, just contact me)
 
 # CHANGELOG
 
+#### v0.2.3
+
+* Adds the forgotten `boolean` support.
+
 #### v0.2.1 - v0.2.2
 
 * Eat `null` and `undefined` where optional argument is expected.
