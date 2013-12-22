@@ -6,10 +6,10 @@
     , filename = process.env.COVER ? './have-cov.js' : './have.js'
     , have = require(filename);
 
-  var NON_ARRS = [null, undefined, 'str', 123, { }, function() { }]
-    , NON_OBJS = [null, undefined, 'str', 123];
+  var NON_ARRS = [null, undefined, 'str', 123, true, { }, function() { }]
+    , NON_OBJS = [null, undefined, 'str', 123, true];
 
-  var COMMON_TYPES = ['string', 'number', 'object', 'function']
+  var COMMON_TYPES = ['string', 'number', 'object', 'boolean', 'function']
     , FUNC = function() { };
 
 
@@ -92,20 +92,23 @@
         { one   : 'string'
         , two   : 'number'
         , three : 'function'
-        , four  : 'object' };
+        , four  : 'object'
+        , five  : 'boolean' };
 
       checkThrows(
         { 'first argument is missing'          : [[], SCHEMA, /one/i]
         , 'second argument is missing'         : [['str'], SCHEMA, /two/i]
         , 'third argument is missing'          : [['str', 123], SCHEMA, /three/i]
         , 'fourth argument is missing'         : [['str', 123, FUNC], SCHEMA, /four/i]
+        , 'fifth argument is missing'          : [['str', 123, FUNC, {}], SCHEMA, /five/i]
         , 'first argument is of invalid type'  : [[123], SCHEMA, /one/i]
         , 'second argument is of invalid type' : [['str', 'str'], SCHEMA, /two/i]
         , 'third argument is of invalid type'  : [['str', 123, 'str'], SCHEMA, /three/i]
         , 'fourth argument is of invalid type' : [['str', 123, FUNC, 123], SCHEMA, /four/i]
+        , 'fifth argument is of invalid type'  : [['str', 123, FUNC, /rx/i, 123], SCHEMA, /five/i]
         });
 
-      checkNotThrows({ 'all arguments given correctly': [['str', 123, FUNC, { }], SCHEMA] });
+      checkNotThrows({ 'all arguments given correctly': [['str', 123, FUNC, { }, true], SCHEMA] });
 
     }); // basic schema
 

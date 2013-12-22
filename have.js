@@ -83,6 +83,9 @@ module.exports = (function(undefined) {
       case 'n': case 'num': case 'number':
         valid = typeof value === 'number'; break;
 
+      case 'b': case 'bool': case 'boolean':
+        valid = typeof value === 'boolean'; break;
+
       case 'f': case 'fun': case 'func': case 'function':
         valid = typeof value === 'function'; break;
 
