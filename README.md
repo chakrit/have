@@ -28,6 +28,7 @@ In order of precedence:
 * `X a|X arr|x array` - Array of X
 * `s|str|string` - String
 * `n|num|number` - Number
+* `b|bool|boolean` - Boolean
 * `f|fun|func|function` - Function
 * `a|arr|array` - Array
 * `o|obj|object` - Object
