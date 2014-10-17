@@ -86,6 +86,15 @@
       })(description, cases[description]);
     }
 
+    function checkResultHash(cases) {
+      for (var description in cases) (function(description, args) {
+        it('should return correct object ' + description, function() {
+            var resultHash = have.call(this, args[0], args[1]);
+            assert.deepEqual(resultHash, args[2], args[3]);
+        });
+      })(description, cases[description]);
+    }
+
     // schema tests
     describe('with basic schema', function() {
       var SCHEMA =
@@ -108,8 +117,17 @@
         , 'fifth argument is of invalid type'  : [['str', 123, FUNC, /rx/i, 123], SCHEMA, /five/i]
         });
 
-      checkNotThrows({ 'all arguments given correctly': [['str', 123, FUNC, { }, true], SCHEMA] });
+      var args = ['str', 123, FUNC, { }, true]
+        , hash =
+        { one   : args[0]
+        , two   : args[1]
+        , three : args[2]
+        , four  : args[3]
+        , five  : args[4] };
 
+      checkNotThrows({ 'all arguments given correctly': [args, SCHEMA] });
+
+      checkResultHash({ 'basic schema arguments hash': [args, SCHEMA, hash]});
     }); // basic schema
 
     describe('with built-in types schema', function() {
@@ -121,9 +139,16 @@
           , 'regex argument is *not* a RegExp' : [['123'], SCHEMA, /one/i]
           });
 
+        var args = [new RegExp(), /test/i];
+
         checkNotThrows(
-          { 'RegExp instance given as argument'            : [[new RegExp()], SCHEMA]
-          , 'regular expression literal given as argument' : [[/test/i], SCHEMA]
+          { 'RegExp instance given as argument'            : [[args[0]], SCHEMA]
+          , 'regular expression literal given as argument' : [[args[1]], SCHEMA]
+          });
+
+        checkResultHash(
+          { 'RegExp instance given as argument'            : [[args[0]], SCHEMA, { one: args[0]}]
+          , 'regular expression literal given as argument' : [[args[1]], SCHEMA, { one: args[1]}]
           });
       });
 
@@ -195,11 +220,31 @@
         , 'arguments after the optional arg is of invalid type'  : [['str', 123, 'str'], SCHEMA, /cb/i]
         });
 
+      casesArgs =
+        [ ['str', FUNC]
+        , ['str', 123, FUNC]
+        , ['str', null, FUNC]
+        , ['str', undefined, FUNC] ];
+
       checkNotThrows(
-        { 'optional argument omitted but other arguments are given correctly'        : [['str', FUNC], SCHEMA]
-        , 'optional arguments specified and all other arguments are given correctly' : [['str', 123, FUNC], SCHEMA]
-        , 'optional argument is specified as `null`'                                 : [['str', null, FUNC], SCHEMA]
-        , 'optioanl argument is specified as `undefined`'                            : [['str', undefined, FUNC], SCHEMA]
+        { 'optional argument omitted but other arguments are given correctly'        : [casesArgs[0], SCHEMA]
+        , 'optional arguments specified and all other arguments are given correctly' : [casesArgs[1], SCHEMA]
+        , 'optional argument is specified as `null`'                                 : [casesArgs[2], SCHEMA]
+        , 'optioanl argument is specified as `undefined`'                            : [casesArgs[3], SCHEMA]
+        });
+
+      checkResultHash(
+        { 'if optional argument omitted but other arguments are given correctly'        :
+          [casesArgs[0], SCHEMA, { str: casesArgs[0][0],                       cb: casesArgs[0][1]}]
+
+        , 'if optional arguments specified and all other arguments are given correctly' :
+          [casesArgs[1], SCHEMA, { str: casesArgs[1][0], num: casesArgs[1][1], cb: casesArgs[1][2]}]
+
+        , 'if optional argument is specified as `null`'                                 :
+          [casesArgs[2], SCHEMA, { str: casesArgs[2][0], num: casesArgs[2][1], cb: casesArgs[2][2]}]
+
+        , 'if optioanl argument is specified as `undefined`'                            :
+          [casesArgs[3], SCHEMA, { str: casesArgs[3][0], num: casesArgs[3][1], cb: casesArgs[3][2]}]
         });
 
     }); // optional arg schema
@@ -235,6 +280,7 @@
           , three : 'opt str'
           , four  : 'str'
           , five  : 'opt num'
+          , six   : 'opt str'
           };
 
         checkThrows(
@@ -242,14 +288,76 @@
           , 'a single argument is given'  : [['two'], SCHEMA, /four/i]
           , 'two numbers are given'       : [[123, 456], SCHEMA, /two/i]
           , 'two strings are given'       : [['str', 'abc'], SCHEMA, /four/i]
-          , 'only the 3rd arg is omitted' : [[123, 'str', 'abc', 456], SCHEMA, /four/i]
+          , 'only the 3rd arg is omitted' : [[123, 'str', 'abc', 456, 'def'], SCHEMA, /four/i]
           });
 
         checkNotThrows(
           { 'three strings are given'              : [['str', 'abc', 'def'], SCHEMA]
           , 'a number and three strings are given' : [[123, 'a', 'b', 'c'], SCHEMA]
-          , 'everything is given'                  : [[123, 'a', 'b', 'c', 456], SCHEMA]
+          , 'everything is given'                  : [[123, 'a', 'b', 'c', 456, 'd'], SCHEMA]
           });
+
+        checkResultHash(
+          { 'if three strings are given' : [
+            ['str', 'abc', 'def'], SCHEMA,
+            { two   : 'str'
+            , three : 'abc'
+            , four  : 'def'
+            , five  : undefined //FIXIT: Optional property "five" should not appear in the args object in this test case
+            , six   : undefined //FIXIT: Optional property "six" should not appear in the args object in this test case
+            }]
+
+          , 'if a number and three strings are given' : [
+            [123, 'a', 'b', 'c'], SCHEMA,
+            { one   : 123
+            , two   : 'a'
+            , three : 'b'
+            , four  : 'c'
+            , five  : undefined //FIXIT: Optional property "five" should not appear in the args object in this test case
+            , six   : undefined //FIXIT: Optional property "six" should not appear in the args object in this test case
+            }]
+
+          , 'if a number, three strings and undefined are given' : [
+            [123, 'a', 'b', 'c', undefined], SCHEMA,
+            { one   : 123
+            , two   : 'a'
+            , three : 'b'
+            , four  : 'c'
+            , five  : undefined // "five" property appear in args object and is undefined
+            , six   : undefined //FIXIT: Optional property "six" should not appear in the args object in this test case
+            }]
+
+          , 'if undefined, three strings and number are given' : [
+            [undefined, 'a', 'b', 'c', 456], SCHEMA,
+            { one   : undefined
+            , two   : 'a'
+            , three : 'b'
+            , four  : 'c'
+            , five  : 456
+            , six   : undefined //FIXIT: Optional property "six" should not appear in the args object in this test case
+            }]
+
+          , 'if only the 3rd arg is undefined' : [
+            [123, 'a', undefined, 'c', 456, 'd'], SCHEMA,
+            { one   : 123
+            , two   : 'a'
+            , three : undefined // "three" property appear in args object and is undefined
+            , four  : 'c'
+            , five  : 456
+            , six   : 'd'
+            }]
+
+          , 'if everything is given' : [
+            [123, 'a', 'b', 'c', 456, 'd'], SCHEMA,
+            { one   : 123
+            , two   : 'a'
+            , three : 'b'
+            , four  : 'c'
+            , five  : 456
+            , six   : 'd'
+            }]
+          });
+
       });
 
       // actually an invalid type but we're testing it to make sure nonetheless
@@ -293,7 +401,7 @@
           , 'multiple nested number arrays are given' : [[ [[[123], [456]], [[789]]] ], SCHEMA]
           })
       });
-    })
+    });
 
   });
 
