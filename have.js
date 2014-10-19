@@ -119,16 +119,16 @@ module.exports = (function(undefined) {
 
     var idx     = 0
       , argName = null
-      , argsHash = {};
+      , parsedArgs = { };
 
     for (argName in schema) {
       if (ensure(argName, schema[argName], args[idx], assert)) {
-          argsHash[argName] = args[idx];
+          parsedArgs[argName] = args[idx];
           idx++;
       }
     }
 
-    return argsHash;
+    return parsedArgs;
   };
 
   // configuration
