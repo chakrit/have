@@ -114,3 +114,8 @@ Just open a [new GitHub issue](https://github.com/chakrit/have/issues/new) or pi
 
 Pull requests and feature suggestions totally welcome.
 
+```
+    40	Chakrit Wichian
+     2	Makeev Vitaliy
+     1	Edmond Meinfelder
+```
