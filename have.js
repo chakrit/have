@@ -118,12 +118,17 @@ module.exports = (function(undefined) {
       throw new Error('have() called with invalid schema object');
 
     var idx     = 0
-      , argName = null;
+      , argName = null
+      , argsHash = {};
 
     for (argName in schema) {
-      if (ensure(argName, schema[argName], args[idx], assert))
-        idx++;
+      if (ensure(argName, schema[argName], args[idx], assert)) {
+          argsHash[argName] = args[idx];
+          idx++;
+      }
     }
+
+    return argsHash;
   };
 
   // configuration
