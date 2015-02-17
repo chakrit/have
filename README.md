@@ -44,6 +44,15 @@ These matchers can be combined. These are all valid HAVE.js matchers:
 
 Have fun!
 
+# PARSED ARGUMENTS
+
+The HAVE.js function also returns any parsed argument collected in a hash keyed to the
+same key as was given in the schema. You can inspect the returned object to more easily
+obtain the parsed value without having to duplicate the HAVE.js parsing logic in your code
+to extract them.
+
+See [@wmakeev PR](https://github.com/chakrit/have/pull/4) for an example.
+
 # SOFT ASSERTS
 
 If you are like me and you write a lot of method preconditions that should be turned off
@@ -84,6 +93,10 @@ BSD (if you don't like BSD, just contact me)
 
 # CHANGELOG
 
+#### v0.3.0
+
+* (credit: @wmakeev) The function now returns parsed arguments as a hash object.
+
 #### v0.2.3
 
 * Adds the forgotten `boolean` support.
@@ -101,3 +114,8 @@ Just open a [new GitHub issue](https://github.com/chakrit/have/issues/new) or pi
 
 Pull requests and feature suggestions totally welcome.
 
+```
+    40	Chakrit Wichian
+     2	Makeev Vitaliy
+     1	Edmond Meinfelder
+```
