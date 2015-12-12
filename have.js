@@ -3,7 +3,6 @@
 module.exports = (function(undefined) {
 
   var assert = require('assert')
-    , fmt    = require('util').format
     , log    = function() { } // require('util').log; // disabled
     ;
 
@@ -45,8 +44,7 @@ module.exports = (function(undefined) {
       memberType = match[2];
       ensure(argName, memberType, value, softAssert);
 
-      check(valid, fmt("%s argument is neither a %s nor %s",
-        argName, match[1], match[2]));
+      check(valid, argName + " argument is neither a " + match[1] + " nor " + match[2]);
       return true;
     }
 
@@ -64,7 +62,7 @@ module.exports = (function(undefined) {
         ensure(argName, memberType, value[i], softAssert);
 
         if (!valid) {
-          check(false, fmt("%s element is falsy or not a %s", argName, memberType));
+          check(false, argName + " element is falsy or not a " + memberType);
           return false;
         }
       }
@@ -106,7 +104,7 @@ module.exports = (function(undefined) {
         valid = false; break;
     }
 
-    check(valid, fmt("%s argument is not %s", argName, argType));
+    check(valid, argName + " argument is not " + argType);
     return true;
   }
 
