@@ -120,14 +120,16 @@ module.exports = (function(undefined) {
       , parsedArgs = { };
 
     for (argName in schema) {
-      if (ensure(argName, schema[argName], args[idx], assert)) {
+      if (schema.hasOwnProperty(argName)) {
+        if (ensure(argName, schema[argName], args[idx], assert)) {
           parsedArgs[argName] = args[idx];
           idx++;
+        }
       }
     }
 
     return parsedArgs;
-  };
+  }
 
   // configuration
   have.assert = function(assert_) {
