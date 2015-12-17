@@ -85,7 +85,7 @@ function safeFunc() {
       }
     ]);
   
-  options = args.options || { some: 'value' };
+  var options = args.options || { some: 'value' };
   
   // some stuff
   if (args.id) {
