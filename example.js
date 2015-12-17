@@ -4,7 +4,7 @@ var assert = require('assert')
 
 
 function withHave(id, arr, opts, callback) {
-  have(arguments,
+  var args = have(arguments,
     { id: 'str or num'
     , arr: 'str or str array'
     , opts: 'optional obj'
@@ -12,9 +12,9 @@ function withHave(id, arr, opts, callback) {
 
   if (!(arr instanceof Array)) { arr = [arr]; }
 
-  if (typeof opts === 'function') {
-    callback = opts;
+  if (!args.opts) {
     opts = { x: 'some default value' };
+    callback = args.callback;
   }
 
   // logic...

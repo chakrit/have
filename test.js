@@ -53,44 +53,60 @@
       });
     });
 
-    it('should throws if `schema` argument does not looks like an options hash', function() {
-      NON_OBJS.forEach(function(thing) {
+    it('should throws if `schema` argument does not looks like an options hash or non empty array', function() {
+      NON_OBJS.concat([[]]).forEach(function(thing) {
         assert.throws(function() { have([], thing); }, /schema/i);
       });
     });
 
     describe('with empty schema', function() {
-      it('should *not* throws', function() {
-        assert.doesNotThrow(function() { have([], { }); });
+      [ [[], {}]
+      , [[], [{}]]
+      , [[], [{}, {}]]
+      , [[], [[{}], {}]]
+      ].forEach(function (args) {
+        it('should *not* throws', function() {
+          assert.doesNotThrow(function() { have.apply(null, args); });
+        });
+
+        it('should *not* throws (strict mode)', function() {
+          assert.doesNotThrow(function() { have.strict.apply(null, args); });
+        });
       });
     }); // empty schema
 
     // templated tests
-    function checkThrows(cases) {
+    function checkThrows(cases, strict) {
       for (var description in cases) (function(description, args) {
         it('should throws if ' + description, function() {
           assert.throws(function() {
-            have.call(this, args[0], args[1]);
+            strict
+              ? have.strict.call(this, args[0], args[1])
+              : have.call(this, args[0], args[1]);
           }, args[2]);
         });
       })(description, cases[description]);
     }
 
-    function checkNotThrows(cases) {
+    function checkNotThrows(cases, strict) {
       for (var description in cases) (function(description, args) {
         it('should *not* throws if ' + description, function() {
           assert.doesNotThrow(function() {
-            have.call(this, args[0], args[1]);
+            strict
+              ? have.strict.call(this, args[0], args[1])
+              : have.call(this, args[0], args[1]);
           }, args[2]);
         });
       })(description, cases[description]);
     }
 
-    function checkResult(cases) {
+    function checkResult(cases, strict) {
       for (var description in cases) (function(description, args) {
         describe('resulting object when ' + description, function() {
-          var result = have.call(this, args[0], args[1]);
-          var expected = args[2]
+          var result = strict
+            ? have.strict.call(this, args[0], args[1])
+            : have.call(this, args[0], args[1]);
+          var expected = args[2];
 
           for (var key in expected) (function(key) {
             assert.strictEqual(result[key], expected[key])
@@ -179,7 +195,7 @@
         , 'array argument is *not* an array' : [['str'], SCHEMA, /arr/i]
         });
 
-      var args = [[123, 456]]
+      var args = [[123, 456]];
 
       checkNotThrows({ 'array argument given correctly': [args, SCHEMA] });
       checkResult({ 'array argument': [args, SCHEMA, { arr: args[0] }] });
@@ -363,8 +379,102 @@
           , 'multiple nested number arrays are given' : [[ [[[123], [456]], [[789]]] ], SCHEMA]
           })
       });
+    }); // complex schema
+
+    describe('with schema matchers variants', function () {
+      var matchers =
+          { 's|str|string'        : 'str'
+          , 'n|num|number'        : 1
+          , 'b|bool|boolean'      : true
+          , 'f|fun|func|function' : function() {}
+          , 'a|arr|array'         : []
+          , 'o|obj|object'        : {}
+          , 'r|rx|regex|regexp'   : /regex/
+          , 'd|date'              : new Date
+          , 'opt str|optional str': 'str'
+          };
+
+      for (var m in matchers) {
+        var variants = m.split(/\|/);
+        for (var v in variants) {
+          var SCHEMA = { arg: variants[v] };
+          var arg = matchers[m];
+          checkResult({ 'given matcher variant': [[arg], SCHEMA, { arg: arg }] });
+        }
+      }
+
+      checkThrows({ 'unknown matcher specified': [['str'], { arg: 'foo' }, /foo/i] });
     });
 
+    describe('with "strict" mode', function () {
+      var SCHEMA = { one: 'str', tow: 'num', three: 'opt str' };
+
+      checkThrows(
+        { 'wrong optional argument specified': [['str', 1, 777], SCHEMA, /777/i]
+        , 'extra unnecessary argument specified': [['str', 1, 'str', 'extra'], SCHEMA, /extra/i]
+        }, true);
+    });
+
+    describe('with schema list', function() {
+      describe('in standard mode', function () {
+        var SCHEMA =
+          [ { one1: 'obj', tow1: 'opt bool' }
+          , { one2: 'str', tow2: 'opt obj', three2: 'opt bool' }
+          , { one3: 'str', tow3: 'opt str', three3: 'opt bool' }
+          ];
+
+        var obj = {};
+        var date = new Date;
+
+        checkThrows(
+          { '[num] arguments not correspond to any schema in list': [[1], SCHEMA, /one1/i]
+          });
+
+        var cases =
+            { '[str, str, boot] arguments correspond to third schema in list':
+              [['str1', 'str2', true], SCHEMA, { one3: 'str1', tow3: 'str2', three3: true }]
+            , '[str, obj, bool] arguments correspond to second schema in list':
+              [['str1', obj, true], SCHEMA, { one2: 'str1', tow2: obj, three2: true }]
+            , '[str, obj] arguments correspond to second schema in list':
+              [['str1', obj], SCHEMA, { one2: 'str1', tow2: obj }]
+            , '[str, date] arguments correspond to second schema in list':
+              [['str1', date], SCHEMA, { one2: 'str1' }]
+            };
+
+        checkNotThrows(cases);
+        checkResult(cases);
+      });
+
+      describe('in strict mode', function () {
+        var SCHEMA =
+          [ { one1: 'obj', tow1: 'opt bool' }
+          , { one2: 'str', tow2: 'opt obj', three2: 'opt bool' }
+          , { one3: 'str', tow3: 'opt str', three3: 'opt bool' }
+          ];
+
+        var obj = {};
+
+        checkThrows(
+          { '[num] arguments not correspond to any schema in list': [[1], SCHEMA, /one1/i]
+          , '[str, num] arguments not correspond to any schema in list':
+            [['str1', 555], SCHEMA, /\"555\"/i]
+          , 'long string arguments not correspond to any schema in list':
+            [['str1', 'str2', 'Whis string argument is longer when 15 simbols'], SCHEMA, /\"Whis string arg\.\.\"/i]
+          }, true);
+
+        var cases =
+          { '[str, str, boot] arguments correspond to third schema in list':
+            [['str1', 'str2', true], SCHEMA, { one3: 'str1', tow3: 'str2', three3: true }]
+          , '[str, obj, bool] arguments correspond to second schema in list':
+            [['str1', obj, true], SCHEMA, { one2: 'str1', tow2: obj, three2: true }]
+          , '[str, obj] arguments correspond to second schema in list':
+            [['str1', obj], SCHEMA, { one2: 'str1', tow2: obj }]
+          };
+
+        checkNotThrows(cases, true);
+        checkResult(cases, true);
+      })
+    }); // schema list
   });
 
 })();

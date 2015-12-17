@@ -51,7 +51,69 @@ same key as was given in the schema. You can inspect the returned object to more
 obtain the parsed value without having to duplicate the HAVE.js parsing logic in your code
 to extract them.
 
-See [@wmakeev PR](https://github.com/chakrit/have/pull/4) for an example.
+```js
+var have = require('have');
+
+function safeFunc(id, options, callback) {
+  var args = have(arguments,
+    { id       : 'string or number'
+    , options  : 'optional object'
+    , callback : 'function'
+    });
+  
+  options = args.options || { some: 'value' };
+  
+  // some stuff
+  someDb.loadById(args.id, options, args.callback);
+};
+```
+
+For a more careful argument names parsing you can pass several schema.
+
+```js
+var have = require('have');
+
+function safeFunc() {
+  var args = have(arguments,
+    [ { id       : 'string or number'
+      , options  : 'optional object'
+      , callback : 'function'
+      }
+    , { query    : 'object'
+      , options  : 'optional object'
+      , callback : 'function'
+      }
+    ]);
+  
+  options = args.options || { some: 'value' };
+  
+  // some stuff
+  if (args.id) {
+    someDb.loadById(args.id, options, args.callback);
+  } else {
+    someDb.find(args.query, options, args.callback);    
+  }
+};
+```
+
+And use "strict" mode to fail for those extra arguments that do not match the schema.
+
+```js
+var have = require('have');
+
+function safeFunc(id, options, callback) {
+  var args = have.strict(arguments,
+    { id       : 'string or number'
+    , options  : 'optional object'
+    , callback : 'function'
+    });
+  
+  // some stuff
+};
+
+// This throws an AssertionError: Wrong argument "foo"
+safeFunc('id', { key: 'value' }, cb, 'foo') 
+```
 
 # SOFT ASSERTS
 

@@ -108,32 +108,78 @@ module.exports = (function(undefined) {
     return true;
   }
 
-  // exports
-  function have(args, schema) {
+  function ensureArgs(args, schema, strict) {
     if (!(args && typeof args === 'object' && 'length' in args))
       throw new Error('have() called with invalid arguments list');
     if (!(schema && typeof schema === 'object'))
       throw new Error('have() called with invalid schema object');
 
-    var idx     = 0
-      , argName = null
-      , parsedArgs = { };
+    var ensureResults = []
+      , parsedArgs = {}
+      , argIndex = 0
+      , fail = null
+      , i;
 
-    for (argName in schema) {
-      if (schema.hasOwnProperty(argName)) {
-        if (ensure(argName, schema[argName], args[idx], assert)) {
-          parsedArgs[argName] = args[idx];
-          idx++;
+    if (schema instanceof Array) {
+      if (!schema.length)
+        throw new Error('have() called with empty schema list');
+
+      for (i = 0, len = schema.length; i < len; i++) {
+        ensureResults[i] = ensureArgs(args, schema[i], strict);
+      }
+
+      ensureResults.sort(function (a, b) {
+        if (a.argIndex > b.argIndex) return -1;
+        if (a.argIndex < b.argIndex) return 1;
+        return 0
+      });
+
+      for (i = 0; i < ensureResults.length; i++) {
+        if (!ensureResults[i].fail) return ensureResults[i];
+      }
+
+      return ensureResults[0];
+    } else {
+      for (var argName in schema) {
+        if (schema.hasOwnProperty(argName)) {
+          var ensured = ensure(argName, schema[argName], args[argIndex], function (cond, fail_) {
+            if (!cond) fail = fail_;
+          });
+          if (fail) break;
+          if (ensured) {
+            parsedArgs[argName] = args[argIndex];
+            argIndex++;
+          }
         }
       }
-    }
 
-    return parsedArgs;
+      if (strict && !fail && argIndex < args.length) {
+        var argStr = args[argIndex].toString();
+        fail = 'Wrong argument "' + (argStr.length > 15 ? argStr.substring(0, 15) + '..' : argStr) + '"';
+      }
+
+      return {
+        fail: fail,
+        parsedArgs: parsedArgs,
+        argIndex: argIndex
+      }
+    }
+  }
+
+  // exports
+  function have(args, schema, strict) {
+    var res = ensureArgs(args, schema, strict);
+    assert(!res.fail, res.fail);
+    return res.parsedArgs;
   }
 
   // configuration
   have.assert = function(assert_) {
     return (assert_ === undefined) ? assert : (assert = assert_);
+  };
+
+  have.strict = function(args, schema) {
+    return have(args, schema, true);
   };
 
   return have;
