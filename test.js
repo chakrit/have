@@ -81,8 +81,8 @@
         it('should throws if ' + description, function() {
           assert.throws(function() {
             strict
-              ? have.strict.call(this, args[0], args[1])
-              : have.call(this, args[0], args[1]);
+              ? have.strict.call(null, args[0], args[1])
+              : have.call(null, args[0], args[1]);
           }, args[2]);
         });
       })(description, cases[description]);
@@ -93,8 +93,8 @@
         it('should *not* throws if ' + description, function() {
           assert.doesNotThrow(function() {
             strict
-              ? have.strict.call(this, args[0], args[1])
-              : have.call(this, args[0], args[1]);
+              ? have.strict.call(null, args[0], args[1])
+              : have.call(null, args[0], args[1]);
           }, args[2]);
         });
       })(description, cases[description]);
@@ -104,8 +104,8 @@
       for (var description in cases) (function(description, args) {
         describe('resulting object when ' + description, function() {
           var result = strict
-            ? have.strict.call(this, args[0], args[1])
-            : have.call(this, args[0], args[1]);
+            ? have.strict.call(null, args[0], args[1])
+            : have.call(null, args[0], args[1]);
           var expected = args[2];
 
           for (var key in expected) (function(key) {
@@ -180,7 +180,7 @@
           , 'date argument is a string'              : [['' + new Date()], SCHEMA, /one/i]
           });
 
-        var args = [new Date()]
+        var args = [new Date()];
 
         checkNotThrows({ 'date argument is given correctly': [args, SCHEMA] });
         checkResult({ 'date argument': [args, SCHEMA, { one: args[0] }] });
@@ -475,6 +475,53 @@
         checkResult(cases, true);
       })
     }); // schema list
+
+    describe('with custom type checkers', function () {
+      function FooType () {
+        this.name = 'FooType'
+      }
+
+      assert.throws(function() {
+        have.with(null);
+      }, 'types argument must be an object');
+
+      var myHave = have.with(
+        { 'Name': function (name) {
+            return name && typeof name === 'string' && name.length > 1 &&
+              name.substring(0, 1) === name.substring(0, 1).toUpperCase()
+          }
+        , 'FooType|foo': function (type) {
+            return type instanceof FooType
+          }
+        });
+
+      var SCHEMA1 = { str: 'str', name: 'opt num or Name', foo: 'FooType' };
+      var fooType = new FooType();
+      var result;
+
+      result = myHave.call(null, ['', 'Jake', fooType], SCHEMA1);
+      assert.strictEqual(result.name, 'Jake');
+      assert.strictEqual(result.foo, fooType);
+
+      assert.throws(function() {
+        myHave.call(null, ['str', 10, {}], SCHEMA1);
+      }, 'foo argument is not FooType');
+
+      var SCHEMA2 = { str: 'str', name: 'opt num or Name', foo: 'foo' };
+      var myHave2 = myHave.with(
+        { 's|str|string': function (str) {
+            return typeof value === 'string' && s.length
+          }
+        });
+
+      assert.doesNotThrow(function() {
+        myHave.call(null, ['', 'Jake', fooType], SCHEMA2);
+      });
+
+      assert.throws(function() {
+        myHave2.call(null, ['', 'Jake', fooType], SCHEMA2);
+      }, 'str argument is not str');
+    })
   });
 
 })();

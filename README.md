@@ -96,7 +96,7 @@ function safeFunc() {
 };
 ```
 
-And use "strict" mode to fail for those extra arguments that do not match the schema.
+Use "strict" mode to fail for those extra arguments that do not match the schema.
 
 ```js
 var have = require('have');
@@ -113,6 +113,31 @@ function safeFunc(id, options, callback) {
 
 // This throws an AssertionError: Wrong argument "foo"
 safeFunc('id', { key: 'value' }, cb, 'foo') 
+```
+
+And, of course, you can define your own matchers and override built-in.
+
+```js
+var have = require('have').with(
+  { 'MyClass|mycls': function (myClass) {
+    return myClass instanceof MyClass
+  }
+  , 's|str|string': function (str) {
+      return typeof str === 'string' && str.length
+    } 
+  });
+
+function safeFunc(myClass, msg) {
+  have(arguments,
+    { myClass : 'MyClass'
+    , msg     : 'optional string'
+    });
+  
+  // some stuff
+};
+
+// This throws an AssertionError: myClass argument is not MyClass
+safeFunc({}, 'hello') 
 ```
 
 # SOFT ASSERTS
@@ -155,9 +180,13 @@ BSD (if you don't like BSD, just contact me)
 
 # CHANGELOG
 
+#### v0.4.0
+
+* Add support for custom arguments matchers
+
 #### v0.3.0
 
-* (credit: @wmakeev) The function now returns parsed arguments as a hash object.
+* The function now returns parsed arguments as a hash object.
 
 #### v0.2.3
 
@@ -178,6 +207,6 @@ Pull requests and feature suggestions totally welcome.
 
 ```
     40	Chakrit Wichian
-     2	Makeev Vitaliy
+     3	Makeev Vitaliy
      1	Edmond Meinfelder
 ```
