@@ -70,7 +70,7 @@
         });
 
         it('should *not* throws (strict mode)', function() {
-          assert.doesNotThrow(function() { have.strict.apply(have, args); });
+          assert.doesNotThrow(function() { have.strict.apply(null, args); });
         });
       });
     }); // empty schema
@@ -81,7 +81,7 @@
         it('should throws if ' + description, function() {
           assert.throws(function() {
             strict
-              ? have.strict.call(have, args[0], args[1])
+              ? have.strict.call(null, args[0], args[1])
               : have.call(null, args[0], args[1]);
           }, args[2]);
         });
@@ -93,7 +93,7 @@
         it('should *not* throws if ' + description, function() {
           assert.doesNotThrow(function() {
             strict
-              ? have.strict.call(have, args[0], args[1])
+              ? have.strict.call(null, args[0], args[1])
               : have.call(null, args[0], args[1]);
           }, args[2]);
         });
@@ -104,7 +104,7 @@
       for (var description in cases) (function(description, args) {
         describe('resulting object when ' + description, function() {
           var result = strict
-            ? have.strict.call(have, args[0], args[1])
+            ? have.strict.call(null, args[0], args[1])
             : have.call(null, args[0], args[1]);
           var expected = args[2];
 

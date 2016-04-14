@@ -199,7 +199,7 @@ module.exports = (function(undefined) {
     }
     var _have = function () { return have.apply(_have, arguments) };
     _have.assert = have.assert;
-    _have.strict = have.strict;
+    _have.strict = have.strict.bind(_have);
     _have.with = have.with;
     _have.types = assign({}, unfoldTypes(this.types), unfoldTypes(types));
 
